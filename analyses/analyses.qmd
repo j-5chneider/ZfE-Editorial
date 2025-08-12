@@ -1,0 +1,219 @@
+---
+title: "Analyses"
+subtitle: "State of Open Data Survey 2024"
+author:
+  - name: "Jürgen Schneider"
+    email: "ju.schneider@dipf.de"
+    affiliation: "DIPF"
+    correspondence: true
+date: "`r Sys.Date()`" # inserts the date of compiling
+editor: source
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  cache: false # true will prevent embed-resources
+format: 
+  html:
+    theme: ceruleanc
+    fontsize: 0.85em
+    toc: true
+    toc-location: left
+    toc-depth: 2
+    embed-resources: true # will make standalone html file
+    code-fold: true
+---
+
+**Credit goes to**
+
+> Nature Research (2024). State of Open Data Survey 2024 additional resources (Version 1). figshare. https://doi.org/10.6084/m9.figshare.27291627.v1
+
+```{r}
+library(rio)
+library(here)
+library(tidyverse)
+library(ggstats)
+library(labelled)
+```
+
+
+# Import
+
+```{r}
+# Extract column names, as we need to delete first two rows
+col_names <- rio::import(here("data/State of Open Data 2024 - Data.xlsx")) %>% 
+              names() 
+
+data <- rio::import(here("data/State of Open Data 2024 - Data.xlsx"), 
+                    skip = 2, # delete first two rows, as second row contains item labels
+                    col_names = col_names)
+rm(col_names)
+
+lvls <- c("Strongly disagree",
+          "Somewhat disagree",
+          "Neutral / No opinion",
+          "Somewhat agree",
+          "Strongly agree")
+```
+
+
+
+# Attitudes
+
+**To what extent do you agree/disagree with the following statements?**
+
+## Over all disciplines
+
+```{r}
+attitudes <- data %>%
+  dplyr::select(Q12_1:Q12_4) %>%
+  mutate(across(everything(), ~ factor(.x,
+             levels = lvls,
+             labels = lvls)))
+             
+attitudes <- attitudes %>%
+  set_variable_labels(
+    Q12_1 = "Making\nresearch articles\nopen access", 
+    Q12_2 = "Making\nresearch data\nopenly available",
+    Q12_3 = "Making\npeer review\nopen",
+    Q12_4 = "Preprinting"
+  )
+
+attitudes %>%
+  gglikert(y_label_wrap = 18,
+           symmetric = TRUE,
+           add_labels = F,
+           width = .6) +
+  geom_vline(xintercept = 0, color = "lightgrey") +
+  scale_fill_manual(values = c("#79042F", "#C77191", "#ececec", "#00CCA9", "#00826C")) +
+  labs(title = "... should be common scholarly practice") +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size = 16),
+        legend.position = "bottom",
+        legend.direction = "vertical",
+        legend.text = element_text(size = 12)) #+
+  # guides(
+  #   fill = guide_legend(nrow = 5, byrow = TRUE) # 2 Reihen, nach Reihen füllen
+  # )
+
+```
+
+## In the Social Sciences
+
+```{r}
+attitudes <- data %>%
+  dplyr::filter(Q8 == "Social Sciences") %>%
+  dplyr::select(Q12_1:Q12_4) %>%
+  mutate(across(everything(), ~ factor(.x,
+             levels = lvls,
+             labels = lvls))))
+             
+attitudes <- attitudes %>%
+  set_variable_labels(
+    Q12_1 = "Making\nresearch articles\nopen access", 
+    Q12_2 = "Making\nresearch data\nopenly available",
+    Q12_3 = "Making\npeer review\nopen",
+    Q12_4 = "Preprinting"
+  )
+
+attitudes %>%
+  gglikert(y_label_wrap = 18,
+           symmetric = TRUE,
+           add_labels = F,
+           width = .6) +
+  geom_vline(xintercept = 0, color = "lightgrey") +
+  scale_fill_manual(values = c("#79042F", "#C77191", "#ececec", "#00CCA9", "#00826C")) +
+  labs(title = "... should be common scholarly practice",
+       caption = "Only Social Sciences") +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size = 16),
+        legend.position = "bottom",
+        legend.direction = "vertical",
+        legend.text = element_text(size = 12)) #+
+  # guides(
+  #   fill = guide_legend(nrow = 5, byrow = TRUE) # 2 Reihen, nach Reihen füllen
+  # )
+
+```
+
+
+# Awareness
+
+**How familiar are you with the following data principles in relation to Open Data?**  
+*FAIR data principles (i.e. Findable, Accessible, Interoperable and Reusable)*
+
+## Over all disciplines
+
+```{r}
+lvls2 <- c("I have never heard of the data principles before now",
+           "I have previously heard of the data principles but I am not familiar with them",
+           "I am familiar with the data principles")
+
+
+attitudes <- data %>%
+  dplyr::select(Q13_1, Q13_2) %>%
+  mutate(across(everything(), ~ factor(.x,
+             levels = lvls2,
+             labels = lvls2))) %>%
+  set_variable_labels(
+    Q13_1 = "FAIR data principles (Findable, Accessible, Interoperable, Reusable)",
+    Q13_2 = "CARE principles for Indigenous Data Governance (i.e. Collective benefit, Authority to control, Responsibility and Ethics)"
+  )
+             
+attitudes %>%
+  gglikert(y_label_wrap = 25,
+           symmetric = TRUE,
+           add_labels = F,
+           width = .6) +
+  geom_vline(xintercept = 0, color = "lightgrey") +
+  scale_fill_manual(values = c("#C77191", "#ececec", "#00CCA9")) +
+  labs(title = "How familiar are you", 
+       subtitle = "with the following data principles in relation to Open Data?") +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size = 15),
+        legend.position = "bottom",
+        legend.direction = "vertical",
+        legend.text = element_text(size = 11)) #+
+  # guides(
+  #   fill = guide_legend(nrow = 5, byrow = TRUE) # 2 Reihen, nach Reihen füllen
+  # )
+```
+
+## In the Social Sciences
+
+```{r}
+attitudes <- data %>%
+  dplyr::filter(Q8 == "Social Sciences") %>%
+  dplyr::select(Q13_1, Q13_2) %>%
+  mutate(across(everything(), ~ factor(.x,
+             levels = lvls2,
+             labels = lvls2))) %>%
+  set_variable_labels(
+    Q13_1 = "FAIR data principles (Findable, Accessible, Interoperable, Reusable)",
+    Q13_2 = "CARE principles for Indigenous Data Governance (i.e. Collective benefit, Authority to control, Responsibility and Ethics)"
+  )
+             
+attitudes %>%
+  gglikert(y_label_wrap = 25,
+           symmetric = TRUE,
+           add_labels = F,
+           width = .6) +
+  geom_vline(xintercept = 0, color = "lightgrey") +
+  scale_fill_manual(values = c("#C77191", "#ececec", "#00CCA9")) +
+  labs(title = "How familiar are you", 
+       subtitle = "with the following data principles in relation to Open Data?",
+       caption = "Only Social Sciences") +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size = 15),
+        legend.position = "bottom",
+        legend.direction = "vertical",
+        legend.text = element_text(size = 11)) #+
+  # guides(
+  #   fill = guide_legend(nrow = 5, byrow = TRUE) # 2 Reihen, nach Reihen füllen
+  # )
+```
